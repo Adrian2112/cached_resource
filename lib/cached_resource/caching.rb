@@ -27,6 +27,10 @@ module CachedResource
         cache_clear
       end
 
+      def get_from_cache(id)
+        cache_read(cache_key(id))
+      end
+
       private
 
       # Try to find a cached response for the given key.  If
