@@ -19,7 +19,7 @@ module CachedResource
     # Initialize a Configuration with the given options, overriding any
     # defaults. The following options exist for cached resource:
     # :enabled, default: true
-    # :ttl, default: 604800
+    # :ttl, Value or a lambda receives the object to cache and return the ttl default: 604800
     # :ttl_randomization, default: false,
     # :ttl_randomization_scale, default: 1..2,
     # :collection_synchronize, default: false,
@@ -45,8 +45,8 @@ module CachedResource
     # Determine the time until a cache entry should expire.  If ttl_randomization
     # is enabled, then a the set ttl will be multiplied by a random
     # value from ttl_randomization_scale.
-    def generate_ttl
-      ttl_randomization && randomized_ttl || ttl
+    def generate_ttl(object)
+      ttl_randomization && randomized_ttl(object) || value_or_call(ttl, object)
     end
 
     # Enables caching.
@@ -63,8 +63,8 @@ module CachedResource
 
     # Get a randomized ttl value between ttl * ttl_randomization_scale begin
     # and ttl * ttl_randomization_scale end
-    def randomized_ttl
-      ttl * sample_range(ttl_randomization_scale)
+    def randomized_ttl(object)
+      value_or_call(ttl, object) * sample_range(ttl_randomization_scale)
     end
 
     # Choose a random value from within the given range, optionally
@@ -72,6 +72,14 @@ module CachedResource
     def sample_range(range, seed=nil)
       srand seed if seed
       rand * (range.end - range.begin) + range.begin
+    end
+
+    def value_or_call(value_or_proc, *args)
+      if value_or_proc.respond_to?(:call)
+        value_or_proc.call(*args)
+      else
+        value_or_proc
+      end
     end
 
   end
