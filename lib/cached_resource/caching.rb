@@ -120,7 +120,9 @@ module CachedResource
         arguments_string = arguments.join('/')
         arguments_key = arguments_string.length > 150 ? Digest::SHA2.hexdigest(arguments_string) : arguments_string
 
-        "#{name.parameterize.gsub("-", "/")}/#{arguments_key}".downcase.delete(' ')
+        cache_key_base = cached_resource.cache_key_base || name.parameterize.gsub("-", "/")
+
+        "#{cache_key_base}/#{arguments_key}".downcase.delete(' ')
       end
 
       # Make a full duplicate of an ActiveResource record.

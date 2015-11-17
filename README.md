@@ -42,6 +42,8 @@ CachedResource accepts the following options:
 * `:collection_arguments` The arguments that identify the principal collection request. Default: `[:all]`
 * `:logger` The logger to which CachedResource messages should be written. Default: The `Rails.logger` if available, or an `ActiveSupport::BufferedLogger`
 * `:cache` The cache store that CacheResource should use. Default: The `Rails.cache` if available, or an `ActiveSupport::Cache::MemoryStore`
+* `:cache_key_base` The cache key you want to use. Defaul: The class
+  name of the object
 
 You can set them like this:
 

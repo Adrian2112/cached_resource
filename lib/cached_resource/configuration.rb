@@ -26,6 +26,8 @@ module CachedResource
     # :collection_arguments, default: [:all]
     # :cache, default: Rails.cache or ActiveSupport::Cache::MemoryStore.new,
     # :logger, default: Rails.logger or ActiveSupport::BufferedLogger.new(NilIO.new)
+    # :cache_key_base, The cache key you want to use. Defaul: The class name of the object
+    #
     def initialize(options={})
       super({
         :enabled => true,
@@ -35,7 +37,8 @@ module CachedResource
         :collection_synchronize => false,
         :collection_arguments => [:all],
         :cache => defined?(Rails.cache)  && Rails.cache || CACHE,
-        :logger => defined?(Rails.logger) && Rails.logger || LOGGER
+        :logger => defined?(Rails.logger) && Rails.logger || LOGGER,
+        :cache_key_base => nil,
       }.merge(options))
     end
 
