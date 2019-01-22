@@ -6,7 +6,8 @@ module CachedResource
 
     included do
       class << self
-        alias_method_chain :find, :cache
+        alias_method :find_without_cache, :find
+        alias_method :find, :find_with_cache
       end
     end
 
@@ -88,7 +89,7 @@ module CachedResource
       # Read a entry from the cache for the given key.
       def cache_read(key)
         object = cached_resource.cache.read(key).try do |json_cache|
-          cache = json_to_object(JSON.parse(json_cache))
+          cache = json_to_object(JSON.parse(json_cache, :symbolize_names => true))
           if cache.is_a? Enumerable
             restored = cache.map { |record| full_dup(record) }
             next restored unless respond_to?(:collection_parser)
@@ -103,7 +104,7 @@ module CachedResource
 
       # Write an entry to the cache for the given key and value.
       def cache_write(key, object)
-        result = cached_resource.cache.write(key, object.to_json, :expires_in => cached_resource.generate_ttl(object))
+        result = cached_resource.cache.write(key, object_to_json(object), :race_condition_ttl => cached_resource.race_condition_ttl, :expires_in => cached_resource.generate_ttl)
         result && cached_resource.logger.info("#{CachedResource::Configuration::LOGGER_PREFIX} WRITE #{key}")
         result
       end
@@ -135,12 +136,20 @@ module CachedResource
 
       def json_to_object(json)
         if json.is_a? Array
-          json.map { |attrs| self.new(attrs) }
+          json.map { |attrs|
+            self.new(attrs[:object], attrs[:persistence]) }
         else
-          self.new(json)
+          self.new(json[:object], json[:persistence])
         end
       end
 
+      def object_to_json(object)
+        if object.is_a? Enumerable
+           object.map { |o| { :object => o, :persistence => o.persisted? } }.to_json
+        else
+          { :object => object, :persistence => object.persisted? }.to_json
+        end
+      end
     end
   end
 end
